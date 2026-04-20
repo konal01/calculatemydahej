@@ -107,6 +107,36 @@ export default function HomePage() {
     <main style={{ minHeight: "100vh", position: "relative" }}>
       <FloatingPetals />
 
+      {/* ── Top announcement bar ── */}
+      <div
+        style={{
+          background: "var(--ink)",
+          color: "rgba(255,248,236,0.65)",
+          textAlign: "center",
+          padding: "9px 20px",
+          fontSize: "0.78rem",
+          fontFamily: "'DM Sans', sans-serif",
+          letterSpacing: "0.02em",
+        }}
+      >
+        👨‍💻 View my other projects →{" "}
+        <a
+          href="https://konal.in"
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{
+            color: "var(--marigold-light)",
+            fontWeight: 600,
+            textDecoration: "none",
+            borderBottom: "1px solid rgba(245,200,80,0.4)",
+            paddingBottom: "1px",
+            transition: "color 0.2s, border-color 0.2s",
+          }}
+        >
+          konal.in
+        </a>
+      </div>
+
       {/* ════════════════════════════════════════════
           HERO — saffron gradient
       ═══════════════════════════════════════════════ */}
