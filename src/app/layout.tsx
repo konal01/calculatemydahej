@@ -6,6 +6,10 @@ export const metadata: Metadata = {
   description:
     "A satirical, awareness-spreading tool that calculates 'dahej' (dowry) amounts for brides and grooms based on Indian society's outdated stereotypes. Let's laugh at the absurdity and end dowry together.",
   keywords: ["dahej", "dowry", "india", "awareness", "dowry calculator", "dahej calculator", "stop dowry"],
+  icons: {
+    icon: "/favicon.svg",
+    shortcut: "/favicon.svg",
+  },
   openGraph: {
     title: "Calculate My Dahej – Dahej Calculator",
     description: "Satirical dowry calculator to spread awareness about the dowry system in India.",
