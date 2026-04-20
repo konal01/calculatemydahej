@@ -3,159 +3,143 @@ import { useState, useCallback } from "react";
 import { formatINR, formatResult } from "@/lib/calculator";
 import type { GroomInputs, GroomResult } from "@/lib/calculator";
 
-const SKIN_TONES_GROOM = [
-  { label: "Very Fair", value: "very_fair", color: "#F5D5B0", bonus: 1.25, desc: "+25% bonus" },
-  { label: "Fair", value: "fair", color: "#E8B88A", bonus: 1.12, desc: "+12% bonus" },
-  { label: "Wheatish", value: "wheatish", color: "#C68642", bonus: 1.0, desc: "neutral" },
-  { label: "Dusky", value: "dusky", color: "#8D5524", bonus: 0.9, desc: "-10% penalty" },
-  { label: "Dark", value: "dark", color: "#4A2912", bonus: 0.78, desc: "-22% penalty" },
+const SKIN_TONES = [
+  { label: "Very Fair", value: "very_fair", color: "#F5D5B0", desc: "+25%" },
+  { label: "Fair",      value: "fair",      color: "#E8B88A", desc: "+12%" },
+  { label: "Wheatish",  value: "wheatish",  color: "#C68642", desc: "base" },
+  { label: "Dusky",     value: "dusky",     color: "#8D5524", desc: "−10%" },
+  { label: "Dark",      value: "dark",      color: "#4A2912", desc: "−22%" },
 ];
 
-const HEIGHT_LABELS: Record<number, string> = {
-  155: "5'1\"", 160: "5'3\"", 165: "5'5\"", 170: "5'7\"",
-  175: "5'9\"", 180: "5'11\"", 185: "6'1\"", 190: "6'3\"",
+const HEIGHT_MAP: Record<number, string> = {
+  150:"4'11\"",155:"5'1\"",160:"5'3\"",165:"5'5\"",170:"5'7\"",175:"5'9\"",180:"5'11\"",185:"6'1\"",190:"6'3\"",195:"6'5\"",
 };
+const nearestHeight = (h: number) => HEIGHT_MAP[Math.round(h / 5) * 5] ?? `${h}cm`;
 
 export default function GroomCalculator() {
-  const [inputs, setInputs] = useState<GroomInputs>({
-    salary: 5,
-    jobType: "private",
-    height: 170,
-    skinTone: "wheatish",
-    education: "graduate",
-    familyStatus: "middle",
-    ownsCar: false,
-    ownsHome: false,
-    abroad: false,
+  const [inp, setInp] = useState<GroomInputs>({
+    salary: 12, jobType: "private", height: 175, skinTone: "wheatish",
+    education: "engineer", familyStatus: "middle",
+    ownsCar: false, ownsHome: false, abroad: false,
   });
-
   const [result, setResult] = useState<GroomResult | null>(null);
-  const [isCalculating, setIsCalculating] = useState(false);
+  const [busy, setBusy] = useState(false);
+
+  const set = (k: keyof GroomInputs, v: unknown) => setInp((p) => ({ ...p, [k]: v }));
 
   const calculate = useCallback(async () => {
-    setIsCalculating(true);
-    setResult(null);
-    await new Promise((r) => setTimeout(r, 900));
-    const res = formatResult(inputs);
-    setResult(res as GroomResult);
-    setIsCalculating(false);
-  }, [inputs]);
-
-  const set = (key: keyof GroomInputs, val: unknown) =>
-    setInputs((prev) => ({ ...prev, [key]: val }));
-
-  const selectedSkin = SKIN_TONES_GROOM.find((s) => s.value === inputs.skinTone);
+    setBusy(true); setResult(null);
+    await new Promise((r) => setTimeout(r, 800));
+    setResult(formatResult(inp) as GroomResult);
+    setBusy(false);
+  }, [inp]);
 
   return (
-    <div className="space-y-6">
-      {/* Awareness Banner */}
-      <div className="awareness-banner">
-        <span className="text-yellow-300 font-semibold">⚠️ Satire for Awareness:</span> This calculator
-        reflects the absurd logic of dowry system in India. These calculations are fictional and exist to highlight
-        how ridiculous it is to value a human being with money & goods.{" "}
-        <strong className="text-yellow-200">Dahej Pratha is illegal & immoral.</strong>
+    <div style={{ display: "flex", flexDirection: "column", gap: "28px" }}>
+
+      {/* Awareness strip */}
+      <div className="awareness-card">
+        <strong style={{ color: "#FFE4A0" }}>⚠️ Satire for Awareness:</strong> These calculations
+        are fictional and highlight the absurdity of valuing a person with money & goods.{" "}
+        <strong style={{ color: "#FFE4A0" }}>Dahej Pratha is illegal & immoral.</strong>
       </div>
 
-      <div className="grid md:grid-cols-2 gap-6">
-        {/* Left Column */}
-        <div className="space-y-5">
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "28px" }}>
+
+        {/* ── LEFT COLUMN ── */}
+        <div style={{ display: "flex", flexDirection: "column", gap: "22px" }}>
+
           {/* Salary */}
           <div>
-            <label className="block text-sm font-semibold mb-2" style={{ color: "#F0C040" }}>
-              💼 Monthly Salary: <span className="text-white">₹{inputs.salary} LPA</span>
+            <label className="field-label">
+              💼 Annual Salary —{" "}
+              <span style={{ color: "var(--saffron)", fontVariantNumeric: "tabular-nums" }}>
+                ₹{inp.salary} LPA
+              </span>
             </label>
-            <input
-              type="range" min={1} max={100} step={1}
-              value={inputs.salary}
-              onChange={(e) => set("salary", Number(e.target.value))}
-            />
-            <div className="flex justify-between text-xs mt-1" style={{ color: "rgba(255,248,231,0.4)" }}>
+            <input type="range" min={1} max={100} step={1} value={inp.salary}
+              onChange={(e) => set("salary", +e.target.value)} />
+            <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.72rem", color: "var(--ink-muted)", marginTop: "5px" }}>
               <span>₹1 LPA</span><span>₹100 LPA</span>
             </div>
           </div>
 
           {/* Job Type */}
           <div>
-            <label className="block text-sm font-semibold mb-2" style={{ color: "#F0C040" }}>
-              🏛️ Job Type
-            </label>
-            <div className="grid grid-cols-2 gap-2">
+            <label className="field-label">🏛️ Job Type</label>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
               {[
-                { value: "govt", label: "🏛️ Sarkari Naukri" },
-                { value: "psu", label: "🔩 PSU / Bank" },
-                { value: "private", label: "💻 Private" },
-                { value: "business", label: "📊 Business" },
-              ].map((j) => (
+                { v: "govt",    l: "🏛️ Sarkari Naukri" },
+                { v: "psu",     l: "🔩 PSU / Bank" },
+                { v: "private", l: "💻 Private" },
+                { v: "business",l: "📊 Business" },
+              ].map(({ v, l }) => (
                 <button
-                  key={j.value}
-                  onClick={() => set("jobType", j.value)}
-                  className={`btn-secondary text-sm py-2 px-3 ${inputs.jobType === j.value ? "active" : ""}`}
+                  key={v}
+                  onClick={() => set("jobType", v)}
+                  className={`btn-ghost ${inp.jobType === v ? "active" : ""}`}
+                  style={{ fontSize: "0.8rem", padding: "9px 12px", textAlign: "left" }}
                 >
-                  {j.label}
+                  {l}
                 </button>
               ))}
             </div>
-            {inputs.jobType === "govt" && (
-              <p className="text-xs mt-1.5" style={{ color: "#F0C040" }}>
-                🎯 Jackpot! Sarkari naukri = maximum dahej unlock
+            {inp.jobType === "govt" && (
+              <p style={{ fontSize: "0.75rem", color: "var(--saffron)", marginTop: "6px", fontFamily: "'DM Sans', sans-serif" }}>
+                🎯 Sarkari naukri = maximum dahej unlocked!
               </p>
             )}
           </div>
 
           {/* Height */}
           <div>
-            <label className="block text-sm font-semibold mb-2" style={{ color: "#F0C040" }}>
-              📏 Height:{" "}
-              <span className="text-white">
-                {inputs.height}cm ({HEIGHT_LABELS[Math.round(inputs.height / 5) * 5] ?? `${Math.round(inputs.height / 2.54 / 12)}'`})
-              </span>
+            <label className="field-label">
+              📏 Height —{" "}
+              <span style={{ color: "var(--saffron)" }}>{inp.height}cm ({nearestHeight(inp.height)})</span>
             </label>
-            <input
-              type="range" min={150} max={195} step={1}
-              value={inputs.height}
-              onChange={(e) => set("height", Number(e.target.value))}
-            />
-            <div className="flex justify-between text-xs mt-1" style={{ color: "rgba(255,248,231,0.4)" }}>
-              <span>5'0"</span><span>6'5"</span>
+            <input type="range" min={150} max={195} step={1} value={inp.height}
+              onChange={(e) => set("height", +e.target.value)} />
+            <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.72rem", color: "var(--ink-muted)", marginTop: "5px" }}>
+              <span>4&apos;11&quot;</span><span>6&apos;5&quot;</span>
             </div>
           </div>
 
           {/* Skin Tone */}
           <div>
-            <label className="block text-sm font-semibold mb-2" style={{ color: "#F0C040" }}>
-              🎨 Skin Tone:{" "}
-              <span className="text-white">{selectedSkin?.label}</span>
-              <span className="ml-2 text-xs" style={{ color: inputs.skinTone === "dark" || inputs.skinTone === "dusky" ? "#FF6B6B" : "#90EE90" }}>
-                ({selectedSkin?.desc})
+            <label className="field-label">
+              🎨 Skin Tone —{" "}
+              <span style={{ color: "var(--saffron)" }}>
+                {SKIN_TONES.find((s) => s.value === inp.skinTone)?.label}
               </span>
             </label>
-            <div className="flex gap-3 flex-wrap">
-              {SKIN_TONES_GROOM.map((s) => (
-                <div key={s.value} className="flex flex-col items-center gap-1">
+            <div style={{ display: "flex", gap: "10px", alignItems: "flex-end", flexWrap: "wrap" }}>
+              {SKIN_TONES.map((s) => (
+                <div key={s.value} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "5px" }}>
                   <div
-                    className={`skin-swatch ${inputs.skinTone === s.value ? "selected" : ""}`}
+                    className={`skin-swatch ${inp.skinTone === s.value ? "selected" : ""}`}
                     style={{ background: s.color }}
                     onClick={() => set("skinTone", s.value)}
                   />
-                  <span className="text-xs" style={{ color: "rgba(255,248,231,0.5)" }}>{s.label.split(" ")[0]}</span>
+                  <span style={{ fontSize: "0.62rem", color: "var(--ink-muted)", fontFamily: "'DM Sans', sans-serif" }}>
+                    {s.label.split(" ")[0]}
+                  </span>
                 </div>
               ))}
             </div>
           </div>
         </div>
 
-        {/* Right Column */}
-        <div className="space-y-5">
+        {/* ── RIGHT COLUMN ── */}
+        <div style={{ display: "flex", flexDirection: "column", gap: "22px" }}>
+
           {/* Education */}
           <div>
-            <label className="block text-sm font-semibold mb-2" style={{ color: "#F0C040" }}>
-              🎓 Education
-            </label>
-            <select value={inputs.education} onChange={(e) => set("education", e.target.value)}>
+            <label className="field-label">🎓 Education</label>
+            <select value={inp.education} onChange={(e) => set("education", e.target.value)}>
               <option value="12th">12th Pass</option>
-              <option value="graduate">Graduate (BA/BCom/BSc)</option>
-              <option value="engineer">Engineer (BTech/BE)</option>
-              <option value="doctor">Doctor (MBBS/MD)</option>
+              <option value="graduate">Graduate (BA / BCom / BSc)</option>
+              <option value="engineer">Engineer (BTech / BE)</option>
+              <option value="doctor">Doctor (MBBS / MD)</option>
               <option value="mba">MBA / Masters</option>
               <option value="phd">PhD / IIT / IIM</option>
             </select>
@@ -163,10 +147,8 @@ export default function GroomCalculator() {
 
           {/* Family Status */}
           <div>
-            <label className="block text-sm font-semibold mb-2" style={{ color: "#F0C040" }}>
-              🏠 Family Status
-            </label>
-            <select value={inputs.familyStatus} onChange={(e) => set("familyStatus", e.target.value)}>
+            <label className="field-label">🏠 Family Status</label>
+            <select value={inp.familyStatus} onChange={(e) => set("familyStatus", e.target.value)}>
               <option value="lower">Lower Middle Class</option>
               <option value="middle">Middle Class</option>
               <option value="upper_middle">Upper Middle Class</option>
@@ -177,54 +159,45 @@ export default function GroomCalculator() {
 
           {/* Bonus Assets */}
           <div>
-            <label className="block text-sm font-semibold mb-3" style={{ color: "#F0C040" }}>
-              🌟 Bonus Assets
-            </label>
-            <div className="space-y-3">
-              {[
-                { key: "ownsCar", label: "🚗 Owns a Car", desc: "Add ₹3–8L to demands" },
-                { key: "ownsHome", label: "🏠 Owns Property/Home", desc: "Add ₹10–25L to demands" },
-                { key: "abroad", label: "✈️ NRI / Works Abroad", desc: "3× multiplier!" },
-              ].map(({ key, label, desc }) => (
-                <label key={key} className="flex items-center gap-3 cursor-pointer group">
+            <label className="field-label">🌟 Bonus Assets</label>
+            <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+              {([
+                { k: "ownsCar",  label: "🚗 Owns a Car",          sub: "Adds ₹3–8L to demand" },
+                { k: "ownsHome", label: "🏠 Owns Property / Home", sub: "Adds ₹10–25L to demand" },
+                { k: "abroad",   label: "✈️ NRI / Works Abroad",   sub: "3× multiplier!" },
+              ] as { k: keyof GroomInputs; label: string; sub: string }[]).map(({ k, label, sub }) => (
+                <div key={k} style={{ display: "flex", alignItems: "center", gap: "12px" }}>
                   <div
-                    className={`w-12 h-6 rounded-full transition-all duration-300 relative flex-shrink-0 ${
-                      inputs[key as keyof GroomInputs] ? "bg-gradient-to-r from-red-800 to-yellow-600" : "bg-gray-800"
-                    }`}
-                    onClick={() => set(key as keyof GroomInputs, !inputs[key as keyof GroomInputs])}
+                    className={`toggle-track ${inp[k] ? "on" : ""}`}
+                    onClick={() => set(k, !inp[k])}
                   >
-                    <div
-                      className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-all duration-300 ${
-                        inputs[key as keyof GroomInputs] ? "left-6" : "left-0.5"
-                      }`}
-                    />
+                    <div className="toggle-thumb" />
                   </div>
                   <div>
-                    <span className="font-medium text-sm">{label}</span>
-                    <p className="text-xs" style={{ color: "rgba(255,248,231,0.45)" }}>{desc}</p>
+                    <div style={{ fontSize: "0.875rem", fontWeight: 500, fontFamily: "'DM Sans', sans-serif", color: "var(--ink)" }}>
+                      {label}
+                    </div>
+                    <div style={{ fontSize: "0.72rem", color: "var(--ink-muted)", fontFamily: "'DM Sans', sans-serif" }}>
+                      {sub}
+                    </div>
                   </div>
-                </label>
+                </div>
               ))}
             </div>
           </div>
         </div>
       </div>
 
-      {/* Calculate Button */}
-      <div className="flex justify-center pt-2">
-        <button onClick={calculate} className="btn-primary relative overflow-hidden" disabled={isCalculating}>
-          {isCalculating ? (
-            <span className="flex items-center gap-2">
-              <span className="inline-block w-4 h-4 border-2 border-yellow-400 border-t-transparent rounded-full animate-spin" />
-              Kundli Match ho raha hai...
-            </span>
-          ) : (
-            "🧮 Calculate Dahej →"
-          )}
+      {/* Calculate button */}
+      <div style={{ display: "flex", justifyContent: "center", paddingTop: "4px" }}>
+        <button className="btn-primary" onClick={calculate} disabled={busy}>
+          {busy
+            ? <><span style={{ display: "inline-block", width: 16, height: 16, border: "2px solid rgba(255,255,255,0.4)", borderTopColor: "#fff", borderRadius: "50%", animation: "spin 0.7s linear infinite" }} /> Calculating…</>
+            : "🧮 Calculate Dahej"}
         </button>
       </div>
+      <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
 
-      {/* Result */}
       {result && <GroomResult result={result} />}
     </div>
   );
@@ -232,40 +205,40 @@ export default function GroomCalculator() {
 
 function GroomResult({ result }: { result: GroomResult }) {
   return (
-    <div className="result-reveal glass-card p-6 mt-4 space-y-4" style={{ border: "1px solid rgba(212,160,23,0.4)" }}>
-      <div className="text-center">
-        <p className="text-sm mb-1" style={{ color: "rgba(255,248,231,0.6)" }}>Estimated Dahej Demand</p>
-        <h3
-          className="fancy-heading gold-gradient-text"
-          style={{ fontSize: "2.8rem", lineHeight: 1 }}
-        >
+    <div className="result-reveal" style={{ borderTop: "1px solid var(--cream-deeper)", paddingTop: "24px", display: "flex", flexDirection: "column", gap: "20px" }}>
+
+      {/* Amount */}
+      <div style={{ textAlign: "center" }}>
+        <p className="field-label" style={{ marginBottom: "6px" }}>Estimated Dahej Demand</p>
+        <h3 className="heading-display text-gradient-warm" style={{ fontSize: "clamp(2.4rem,6vw,3.6rem)", lineHeight: 1 }}>
           {formatINR(result.total)}
         </h3>
-        <p className="text-sm mt-1" style={{ color: "rgba(255,248,231,0.5)" }}>
-          + {result.extras.join(" + ")}
-        </p>
+        {result.extras.length > 0 && (
+          <p style={{ fontSize: "0.8rem", color: "var(--ink-muted)", marginTop: "6px", fontFamily: "'DM Sans', sans-serif" }}>
+            + {result.extras.join(" · ")}
+          </p>
+        )}
       </div>
 
-      <div className="ornament">
-        <span className="text-xs" style={{ color: "#D4A017" }}>✦ Breakdown ✦</span>
-      </div>
-
-      <div className="space-y-2">
+      {/* Breakdown */}
+      <div style={{ background: "var(--cream)", borderRadius: "12px", padding: "18px 20px", display: "flex", flexDirection: "column", gap: "10px" }}>
+        <p className="field-label" style={{ marginBottom: "2px" }}>Breakdown</p>
         {result.breakdown.map((item, i) => (
-          <div key={i} className="flex items-center justify-between text-sm">
-            <span style={{ color: "rgba(255,248,231,0.7)" }}>{item.label}</span>
-            <span style={{ color: "#F0C040", fontWeight: 600 }}>{item.value}</span>
+          <div key={i} style={{ display: "flex", justifyContent: "space-between", fontSize: "0.85rem", fontFamily: "'DM Sans', sans-serif" }}>
+            <span style={{ color: "var(--ink-muted)" }}>{item.label}</span>
+            <span style={{ fontWeight: 600, color: "var(--saffron-dark)" }}>{item.value}</span>
           </div>
         ))}
       </div>
 
-      <div className="awareness-banner text-center" style={{ fontSize: "0.8rem" }}>
-        🚨 <strong>Remember:</strong> This is satire. {result.awareneessMsg}
+      {/* Awareness */}
+      <div className="awareness-card" style={{ textAlign: "center" }}>
+        🚨 <strong>Remember:</strong> {result.awareneessMsg}
       </div>
 
-      <div className="text-center text-xs" style={{ color: "rgba(255,248,231,0.35)" }}>
-        Dahej Prohibition Act, 1961 — Giving or taking dowry is a criminal offence punishable under IPC.
-      </div>
+      <p style={{ textAlign: "center", fontSize: "0.72rem", color: "var(--ink-muted)", fontFamily: "'DM Sans', sans-serif" }}>
+        Dahej Prohibition Act, 1961 — Giving or taking dowry is punishable under IPC.
+      </p>
     </div>
   );
 }
